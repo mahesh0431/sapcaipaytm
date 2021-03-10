@@ -1,0 +1,91 @@
+_schema-version: "3.2"
+ID: paytmcaipacked
+version: 1.0.0
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm install
+
+modules:
+  - name: paytmcai
+    type: nodejs
+    path: app
+    parameters:
+      disk-quota: 512M
+      memory: 512M
+      
+  - name: paytmhtml-destination-content
+    type: com.sap.application.content
+    requires:
+      - name: paytmhtml_uaa
+        parameters:
+          service-key:
+            name: paytmhtml_uaa-key
+      - name: paytmhtml_html_repo_host
+        parameters:
+          service-key:
+            name: paytmhtml_html_repo_host-key
+      - name: paytmhtml-destination-service
+        parameters:
+          content-target: true
+    parameters:
+      content:
+        instance:
+          destinations:
+            - Name: my_service_paytmhtml_html_repo_host
+              ServiceInstanceName: paytmhtml_html_repo_host
+              ServiceKeyName: paytmhtml_html_repo_host-key
+              sap.cloud.service: basic.service
+            - Authentication: OAuth2UserTokenExchange
+              Name: my_service_uaa_paytmhtml
+              ServiceInstanceName: paytmhtml_uaa
+              ServiceKeyName: uaa_paytmhtml-key
+              sap.cloud.service: basic.service
+          existing_destinations_policy: update
+    build-parameters:
+      no-source: true
+  - name: paytmhtml_ui_deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: paytmhtml_html_repo_host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - artifacts:
+            - paytmhtml-content.zip
+          name: paytmhtml
+          target-path: resources/
+  - name: paytmhtml
+    type: html5
+    path: paymentgateway
+    build-parameters:
+      builder: custom
+      commands:
+        - npm run build
+      supported-platforms: []
+resources:
+  - name: paytmhtml-destination-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-name: paytmhtml-destination-service
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        version: 1.0.0
+  - name: paytmhtml_html_repo_host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: paytmhtml_uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      path: ./xs-security.json
+      service: xsuaa
+      service-plan: application

@@ -1,0 +1,36 @@
+<html>
+
+<head>
+    <title>Payment Page</title>
+</head>
+
+<body>
+    <center>
+        <h1>Routing to Payment Gateway. Please do not refresh this page....</h1>
+    </center>
+    <form method="post"
+        action="https://securegw-stage.paytm.in/theia/api/v1/showPaymentPage?mid=%mid%&orderId=%orderid%" name="paytm">
+        <table border="1">
+            <tbody>
+                <input type="hidden" name="mid" value="%mid%">
+                <input type="hidden" name="orderId" value="%orderid%">
+                <input type="hidden" name="txnToken" value="%token%">
+            </tbody>
+        </table>
+        <script type="text/javascript">
+            const params = new URLSearchParams(window.location.search);
+            var form = document.getElementsByName("paytm")[0];
+            var sActionURL = form.action;
+            sActionURL = sActionURL.replace('%mid%', params.get('mid'));
+            sActionURL = sActionURL.replace('%orderid%', params.get('orderid'));
+            form.action = sActionURL
+
+            document.getElementsByName("mid")[0].value = params.get('mid');
+            document.getElementsByName("orderId")[0].value = params.get('orderid');
+            document.getElementsByName("txnToken")[0].value = params.get('Token');
+            document.paytm.submit();
+        </script>
+    </form>
+</body>
+
+</html>
